@@ -2,6 +2,7 @@ Single Carrier QPSK Modem (rev.2)
 
 1. Block Diagram
 TX Path:
+
 ┌─────────────┐    ┌──────────┐    ┌─────────┐    ┌─────────┐
 │   Payload   │ -> │  Frame   │ -> │Upsample │ -> │ TX RRC  │
 │   Source    │    │ Builder  │    │  (×4)   │    │ Filter  │
@@ -9,6 +10,7 @@ TX Path:
                    [Preamble+Data]
 
 RX Path:
+
 ┌─────────┐    ┌──────────┐    ┌───────────┐    ┌──────────┐
 │ RX RRC  │ -> │Downsample│ -> │ Preamble  │ -> │  Frame   │
 │ Filter  │    │  (÷4)    │    │Correlator │    │  Sync    │
