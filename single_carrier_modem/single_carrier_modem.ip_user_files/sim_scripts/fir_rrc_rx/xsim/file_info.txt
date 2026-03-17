@@ -1,0 +1,1 @@
+fir_rrc_rx.vhd,vhdl,xil_defaultlib,../../../../single_carrier_modem.gen/sources_1/ip/fir_rrc_rx/sim/fir_rrc_rx.vhd,
