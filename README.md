@@ -28,4 +28,5 @@ RX Path:
   - (added) preamble_correlator.sv : RX Cross-correlation (detection for preamble)
   - (added) frame_sync_detector.sv : RX Sync detection (Peak detection + Threshold)
     
-4. coe for RRC Filter is generated from python code ( https://colab.research.google.com/drive/1_Zry-mf2LVL4mHI1rFktUdSwNIZy-wqP#scrollTo=-t1DMAErsUGN )
+4. coe for RRC Filter is generated from python code
+(https://colab.research.google.com/drive/1-HC_bs9uaeJNTQLxwt3K4fK4ERaWVdkj#scrollTo=C2Mpio77RFpq)
