@@ -1,4 +1,0 @@
-INFO: [VRFC 10-163] Analyzing VHDL file "/home/hong/workspace_m10/single_carrier_modem/single_carrier_modem.gen/sources_1/ip/fir_rrc_rx/sim/fir_rrc_rx.vhd" into library xil_defaultlib
-INFO: [VRFC 10-3107] analyzing entity 'fir_rrc_rx'
-INFO: [VRFC 10-163] Analyzing VHDL file "/home/hong/workspace_m10/single_carrier_modem/single_carrier_modem.gen/sources_1/ip/fir_rrc/sim/fir_rrc.vhd" into library xil_defaultlib
-INFO: [VRFC 10-3107] analyzing entity 'fir_rrc'

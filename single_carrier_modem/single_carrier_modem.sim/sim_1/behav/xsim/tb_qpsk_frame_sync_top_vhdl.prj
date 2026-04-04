@@ -1,7 +1,0 @@
-# compile vhdl design source files
-vhdl xil_defaultlib  \
-"../../../../single_carrier_modem.gen/sources_1/ip/fir_rrc_rx/sim/fir_rrc_rx.vhd" \
-"../../../../single_carrier_modem.gen/sources_1/ip/fir_rrc/sim/fir_rrc.vhd" \
-
-# Do not sort compile order
-nosort
