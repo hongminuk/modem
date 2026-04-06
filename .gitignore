@@ -1,0 +1,28 @@
+# Vim swap files
+.*.swp
+.*.swo
+
+# Python
+__pycache__/
+*.pyc
+
+# Vivado project & logs
+*.jou
+*.log
+*.pb
+*.str
+.Xil/
+
+# xsim / xvlog
+xsim.dir/
+xvlog.log
+xvlog.pb
+*.wdb
+webtalk/
+
+# Simulation plots (regeneratable)
+# scm/src/algo/*.png
+
+# OS
+.DS_Store
+Thumbs.db

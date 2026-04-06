@@ -4,8 +4,10 @@
 // Description: 
 //   Correlates incoming symbol stream with known preamble pattern
 //   
-//   Computes sliding cross-correlation:
-//   R[n] = Σ(k=0 to L-1) { r_I[n-k]·p_I[k] + r_Q[n-k]·p_Q[k] }
+//   Computes sliding cross-correlation (matched filter):
+//   R[n] = Σ(k=0 to L-1) { r[n-k] · conj(p[L-1-k]) }
+//        = Σ(k=0 to L-1) { r_I[n-k]·p_I[L-1-k] + r_Q[n-k]·p_Q[L-1-k] }
+//                       + j·{ r_Q[n-k]·p_I[L-1-k] - r_I[n-k]·p_Q[L-1-k] }
 //   
 //   where:
 //   - r_I, r_Q: received I/Q symbols
@@ -71,23 +73,26 @@ module preamble_correlator #(
     // =========================================================================
     // Correlation Computation (Combinational)
     // =========================================================================
-    // Complex correlation: R = Σ r[k] * conj(p[k])
-    //                        = Σ (r_I[k] + j·r_Q[k]) * (p_I[k] - j·p_Q[k])
-    //                        = Σ (r_I[k]·p_I[k] + r_Q[k]·p_Q[k]) 
-    //                          + j·(r_Q[k]·p_I[k] - r_I[k]·p_Q[k])
-    
+    // Matched filter (cross-correlation):
+    //   R[n] = Σ r[n-k] · conj(p[L-1-k])
+    //
+    // shift_i[k] = rx[n-k], so we multiply by time-reversed reference p[L-1-k].
+    // This ensures peak occurs exactly when preamble is aligned in shift register.
+
     logic signed [W_CORR-1:0] sum_i, sum_q;
-    
+
     always_comb begin
         sum_i = '0;
         sum_q = '0;
-        
+
         for (int k = 0; k < PREAMBLE_LEN; k++) begin
-            // Real part: r_I[k]*p_I[k] + r_Q[k]*p_Q[k]
-            sum_i = sum_i + shift_i[k] * PREAMBLE_I[k] + shift_q[k] * PREAMBLE_Q[k];
-            
-            // Imag part: r_Q[k]*p_I[k] - r_I[k]*p_Q[k]
-            sum_q = sum_q + shift_q[k] * PREAMBLE_I[k] - shift_i[k] * PREAMBLE_Q[k];
+            // Real part: r_I[n-k]*p_I[L-1-k] + r_Q[n-k]*p_Q[L-1-k]
+            sum_i = sum_i + shift_i[k] * PREAMBLE_I[PREAMBLE_LEN-1-k]
+                          + shift_q[k] * PREAMBLE_Q[PREAMBLE_LEN-1-k];
+
+            // Imag part: r_Q[n-k]*p_I[L-1-k] - r_I[n-k]*p_Q[L-1-k]
+            sum_q = sum_q + shift_q[k] * PREAMBLE_I[PREAMBLE_LEN-1-k]
+                          - shift_i[k] * PREAMBLE_Q[PREAMBLE_LEN-1-k];
         end
     end
     
