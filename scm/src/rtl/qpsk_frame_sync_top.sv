@@ -4,8 +4,9 @@
 // Description: 
 //   Complete QPSK Modem with Frame Synchronization
 //   
-//   TX Path: Payload → Frame Builder → Upsample → TX RRC
+//   TX Path: Bits → QPSK Mod → Frame Builder → Upsample → TX RRC
 //   RX Path: RX RRC → Downsample → Correlator → Detector
+//                                ↘ QPSK Demod → Bits
 //   
 //   Features:
 //   - Automatic preamble insertion (TX)
@@ -37,17 +38,16 @@ module qpsk_frame_sync_top #(
     input  logic                 rst_n,
     
     // =========================================================================
-    // TX Side: Payload Input
+    // TX Side: Bit Input
     // =========================================================================
     // Frame control
     input  logic                 tx_frame_start,    // Pulse to start new frame
     input  logic [15:0]          tx_payload_len,    // Number of payload symbols
-    
-    // Payload symbols (user data)
-    input  logic signed [W-1:0]  tx_payload_i,
-    input  logic signed [W-1:0]  tx_payload_q,
-    input  logic                 tx_payload_valid,
-    output logic                 tx_payload_ready,
+
+    // Raw bit input (2 bits per QPSK symbol)
+    input  logic [1:0]           tx_bits,
+    input  logic                 tx_bits_valid,
+    output logic                 tx_bits_ready,
     
     // TX Output (to channel/DAC)
     output logic signed [W_2-1:0] tx_out_i,
@@ -64,12 +64,17 @@ module qpsk_frame_sync_top #(
     input  logic                  rx_in_valid,
     output logic                  rx_in_ready,
     
-    // RX Output: Recovered symbols
+    // RX Output: Recovered bits (2 bits per symbol)
+    output logic [1:0]            rx_bits,
+    output logic                  rx_bits_valid,
+    input  logic                  rx_bits_ready,
+
+    // RX Output: Recovered symbols (for debug/monitoring)
     output logic signed [W_3-1:0] rx_out_i,
     output logic signed [W_3-1:0] rx_out_q,
     output logic                  rx_out_valid,
     input  logic                  rx_out_ready,
-    
+
     // Frame Sync Output
     output logic                  rx_sync_found,    // Pulse when frame detected
     output logic [31:0]           rx_sync_index,    // Sample index of detection
@@ -77,11 +82,32 @@ module qpsk_frame_sync_top #(
 );
 
     // =========================================================================
+    // TX Path: QPSK Modulator (bits -> symbols)
+    // =========================================================================
+    logic signed [W-1:0] tx_mod_i, tx_mod_q;
+    logic                tx_mod_valid, tx_mod_ready;
+
+    qpsk_modulator #(
+        .W(W),
+        .SCALE(12000)
+    ) u_qpsk_mod (
+        .clk(clk),
+        .rst_n(rst_n),
+        .in_data(tx_bits),
+        .in_valid(tx_bits_valid),
+        .in_ready(tx_bits_ready),
+        .out_i(tx_mod_i),
+        .out_q(tx_mod_q),
+        .out_valid(tx_mod_valid),
+        .out_ready(tx_mod_ready)
+    );
+
+    // =========================================================================
     // TX Path: Frame Builder
     // =========================================================================
     logic signed [W-1:0] frame_i, frame_q;
     logic                frame_valid, frame_ready;
-    
+
     frame_builder #(
         .W(W),
         .PREAMBLE_LEN(PREAMBLE_LEN)
@@ -93,11 +119,11 @@ module qpsk_frame_sync_top #(
         .in_frame_start(tx_frame_start),
         .in_payload_len(tx_payload_len),
         
-        // Payload input
-        .in_i(tx_payload_i),
-        .in_q(tx_payload_q),
-        .in_valid(tx_payload_valid),
-        .in_ready(tx_payload_ready),
+        // Payload input (from QPSK modulator)
+        .in_i(tx_mod_i),
+        .in_q(tx_mod_q),
+        .in_valid(tx_mod_valid),
+        .in_ready(tx_mod_ready),
         
         // Frame output (preamble + payload)
         .out_i(frame_i),
@@ -269,16 +295,28 @@ module qpsk_frame_sync_top #(
     );
     
     // =========================================================================
-    // RX Output: Connect to correlator output (symbols with sync info)
+    // RX Path: QPSK Demodulator (symbols -> bits)
     // =========================================================================
-    // Note: In a complete system, you'd use rx_sync_found to extract payload
-    // For now, we pass through the downsampled symbols
+    qpsk_demodulator #(
+        .W(W_3)
+    ) u_qpsk_demod (
+        .clk(clk),
+        .rst_n(rst_n),
+        .in_i(rx_dn_i),
+        .in_q(rx_dn_q),
+        .in_valid(rx_dn_valid),
+        .in_ready(),                // demod always accepts
+        .out_data(rx_bits),
+        .out_valid(rx_bits_valid),
+        .out_ready(rx_bits_ready)
+    );
+
+    // =========================================================================
+    // RX Output: Pass through downsampled symbols for debug/monitoring
+    // =========================================================================
     assign rx_out_i     = rx_dn_i;
     assign rx_out_q     = rx_dn_q;
     assign rx_out_valid = rx_dn_valid;
-    assign rx_out_ready = 1'b1;  // Always ready for now
-    
-    // If you want backpressure from output:
-    // assign rx_dn_ready = rx_out_ready & corr_ready;
+    assign rx_out_ready = 1'b1;
 
 endmodule
