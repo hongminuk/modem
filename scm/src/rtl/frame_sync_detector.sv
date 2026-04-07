@@ -21,8 +21,8 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module frame_sync_detector #(
-    parameter int W_CORR    = 72,
-    parameter int THRESHOLD = 32'd1000000000  // Adjust based on expected correlation peak
+    parameter int      W_CORR    = 72,
+    parameter longint  THRESHOLD = 64'd1000000000  // 64-bit to match mag_sq[127:64] width
 )(
     input  logic                     clk,
     input  logic                     rst_n,

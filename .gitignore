@@ -23,6 +23,12 @@ webtalk/
 # Simulation plots (regeneratable)
 # scm/src/algo/*.png
 
+# FIR IP coefficient files (auto-copied from Vivado_Project by run_all.sh)
+scm/src/tb/*.mif
+
+# Vivado generated project (regeneratable from create_project.tcl)
+scm/Vivado_Project/
+
 # OS
 .DS_Store
 Thumbs.db

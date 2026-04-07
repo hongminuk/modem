@@ -13,7 +13,8 @@ scm/src/tb/
 ├── tb_axis_downsample_pick.sv          # 5. 다운샘플러 TB
 ├── tb_preamble_correlator.sv           # 6. 프리앰블 상관기 TB
 ├── tb_frame_sync_detector.sv           # 7. 프레임 동기 검출기 TB
-├── tb_loopback_no_fir.sv              # 8. End-to-End 루프백 TB
+├── tb_loopback_no_fir.sv              # 8. End-to-End 루프백 TB (FIR bypass)
+├── tb_qpsk_frame_sync_top.sv          # 9. Top module TB (with FIR IP)
 │
 ├── wave_tb_*.tcl                       # 각 TB의 파형 설정 (8개)
 │
@@ -220,6 +221,45 @@ python3 gen_test_vectors.py
 > **참고**: Xilinx FIR Compiler IP 없이 동작. Upsample → Downsample 직결 루프백.
 > Payload offset = PREAMBLE_LEN + 1 = 17 (modulator pipeline delay).
 > 49/50 payload symbols 검증 (마지막 1개는 pipeline 밖으로 밀림).
+
+### TB 9: `tb_qpsk_frame_sync_top`
+
+| 항목 | 값 |
+|------|-----|
+| DUT | `qpsk_frame_sync_top.sv` (실제 top, FIR IP 포함) |
+| 데이터 | LFSR 100 symbols (200 bits) + dummy flush frame |
+| 검증 | TX bits == RX demod bits, BER = 0/100 |
+| 핵심 확인 | 최신 QPSK mod/demod + 수정된 correlator + 실제 FIR IP |
+
+**필요한 것**: Xilinx FIR Compiler IP (`fir_rrc.vhd`, `fir_rrc_rx.vhd`, `*.mif`)
+
+**컴파일 순서**:
+
+```bash
+# 1. FIR IP VHDL을 xil_defaultlib에 컴파일
+xvhdl -work xil_defaultlib \
+  ../../Vivado_Project/single_carrier_modem.gen/sources_1/ip/fir_rrc/sim/fir_rrc.vhd \
+  ../../Vivado_Project/single_carrier_modem.gen/sources_1/ip/fir_rrc_rx/sim/fir_rrc_rx.vhd
+
+# 2. MIF 파일 작업 디렉토리에 복사
+cp ../../Vivado_Project/single_carrier_modem.gen/sources_1/ip/fir_rrc/fir_rrc.mif .
+cp ../../Vivado_Project/single_carrier_modem.gen/sources_1/ip/fir_rrc_rx/fir_rrc_rx.mif .
+
+# 3. RTL + TB 컴파일
+xvlog -sv ../rtl/*.sv tb_qpsk_frame_sync_top.sv
+
+# 4. Elaborate (xil_defaultlib와 fir_compiler_v7_2_23 라이브러리 링크)
+xelab -L xil_defaultlib -L fir_compiler_v7_2_23 tb_qpsk_frame_sync_top -s sim_top
+
+# 5. 실행
+xsim sim_top -runall
+```
+
+> **자동화**: `./run_all.sh`가 위 모든 단계를 자동으로 처리합니다.
+
+**주요 발견**: 이 TB 작성 중 `qpsk_frame_sync_top.sv`의 multiple driver 버그와
+`frame_sync_detector.sv`의 파라미터 width 버그를 발견 및 수정했습니다.
+자세한 내용은 [bug_report_top_module.md](bug_report_top_module.md) 참조.
 
 ---
 

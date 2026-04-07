@@ -231,10 +231,12 @@ module qpsk_frame_sync_top #(
     // RX Path: Downsample
     // =========================================================================
     logic signed [W_3-1:0] rx_dn_i, rx_dn_q;
-    logic                  rx_dn_valid, rx_dn_ready;
-    
-    assign rx_fir_ready = rx_dn_ready;
-    
+    logic                  rx_dn_valid;
+    logic                  rx_dn_in_ready;   // downsample → upstream (FIR) backpressure
+    logic                  rx_dn_out_ready;  // correlator → downsample backpressure
+
+    assign rx_fir_ready = rx_dn_in_ready;
+
     axis_downsample_pick #(
         .W(W),
         .W_3(W_3),
@@ -246,19 +248,19 @@ module qpsk_frame_sync_top #(
         .in_i(rx_fir_i),
         .in_q(rx_fir_q),
         .in_valid(rx_fir_valid_i & rx_fir_valid_q),
-        .in_ready(rx_dn_ready),
+        .in_ready(rx_dn_in_ready),
         .out_i(rx_dn_i),
         .out_q(rx_dn_q),
         .out_valid(rx_dn_valid),
-        .out_ready(rx_dn_ready)
+        .out_ready(rx_dn_out_ready)
     );
-    
+
     // =========================================================================
     // RX Path: Preamble Correlator
     // =========================================================================
     logic signed [W_CORR-1:0] corr_i, corr_q;
     logic                     corr_valid, corr_ready;
-    
+
     preamble_correlator #(
         .W(W_3),
         .W_CORR(W_CORR),
@@ -269,7 +271,7 @@ module qpsk_frame_sync_top #(
         .in_i(rx_dn_i),
         .in_q(rx_dn_q),
         .in_valid(rx_dn_valid),
-        .in_ready(rx_dn_ready),
+        .in_ready(rx_dn_out_ready),
         .corr_i(corr_i),
         .corr_q(corr_q),
         .corr_valid(corr_valid),
