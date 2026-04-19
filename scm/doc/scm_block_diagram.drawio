@@ -1,0 +1,267 @@
+<mxfile host="app.diagrams.net" modified="2026-04-19" agent="claude-code" version="22.0.0">
+  <diagram name="QPSK Frame-Sync Modem" id="scm_main">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="Single-Carrier QPSK Modem with Frame Sync — qpsk_frame_sync_top.sv" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1600" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ============================ TX LANE ============================ -->
+        <mxCell id="tx_lane" value="TX PATH" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#6c8ebf;dashed=1;strokeWidth=1;fontStyle=1;fontSize=12;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="1620" height="180" as="geometry" />
+        </mxCell>
+
+        <!-- TX blocks -->
+        <mxCell id="tx_bits" value="tx_bits&#10;[1:0]&#10;tx_bits_valid&#10;tx_bits_ready" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=center" vertex="1" parent="1">
+          <mxGeometry x="60" y="140" width="110" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tx_ctrl" value="tx_frame_start&#10;tx_payload_len[15:0]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=center;dashed=1" vertex="1" parent="1">
+          <mxGeometry x="380" y="100" width="180" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="qpsk_mod" value="&lt;b&gt;qpsk_modulator&lt;/b&gt;&#10;bit → symbol&#10;0→+SCALE, 1→−SCALE" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=center" vertex="1" parent="1">
+          <mxGeometry x="210" y="140" width="150" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="frame_builder" value="&lt;b&gt;frame_builder&lt;/b&gt;&#10;FSM: IDLE→PREAMBLE(16)&#10;→PAYLOAD(payload_len)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=center" vertex="1" parent="1">
+          <mxGeometry x="400" y="140" width="170" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="upsample" value="&lt;b&gt;axis_upsample_zeros&lt;/b&gt;&#10;phase 0 → symbol&#10;phase 1..SPS−1 → 0&#10;(SPS=4)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=center" vertex="1" parent="1">
+          <mxGeometry x="610" y="140" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="fir_tx" value="&lt;b&gt;fir_rrc&lt;/b&gt; (×2: I, Q)&#10;Xilinx FIR Compiler IP&#10;RRC β=0.35, span=10&#10;16b coef, 16b→40b" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;align=center" vertex="1" parent="1">
+          <mxGeometry x="830" y="140" width="190" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tx_out" value="tx_out_i[39:0]&#10;tx_out_q[39:0]&#10;tx_out_valid/ready" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=center" vertex="1" parent="1">
+          <mxGeometry x="1060" y="140" width="140" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- TX arrows -->
+        <mxCell id="e_tx1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="tx_bits" target="qpsk_mod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_tx1_lbl" value="2 b" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10" vertex="1" connectable="0" parent="e_tx1">
+          <mxGeometry x="0" y="-1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e_tx2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="qpsk_mod" target="frame_builder">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_tx2_lbl" value="I/Q 16b&#10;(sym rate)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10" vertex="1" connectable="0" parent="e_tx2">
+          <mxGeometry x="0" y="-1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e_tx3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="frame_builder" target="upsample">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_tx3_lbl" value="I/Q 16b&#10;(sym rate)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10" vertex="1" connectable="0" parent="e_tx3">
+          <mxGeometry x="0" y="-1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e_tx4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="upsample" target="fir_tx">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_tx4_lbl" value="I/Q 16b&#10;(samp rate ×SPS)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10" vertex="1" connectable="0" parent="e_tx4">
+          <mxGeometry x="0" y="-1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e_tx5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="fir_tx" target="tx_out">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_tx5_lbl" value="I/Q 40b" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10" vertex="1" connectable="0" parent="e_tx5">
+          <mxGeometry x="0" y="-1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <!-- Control → frame_builder -->
+        <mxCell id="e_ctrl" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;dashed=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0" edge="1" parent="1" source="tx_ctrl" target="frame_builder">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============================ CHANNEL ============================ -->
+        <mxCell id="channel" value="&lt;b&gt;Channel&lt;/b&gt;&#10;AWGN + path loss&#10;(RTL external)" style="rounded=20;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;align=center" vertex="1" parent="1">
+          <mxGeometry x="760" y="310" width="200" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_ch1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0" edge="1" parent="1" source="tx_out" target="channel">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ch2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0" edge="1" parent="1" source="channel" target="rx_in">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============================ RX LANE ============================ -->
+        <mxCell id="rx_lane" value="RX PATH" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#d6b656;dashed=1;strokeWidth=1;fontStyle=1;fontSize=12;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6" vertex="1" parent="1">
+          <mxGeometry x="40" y="420" width="1620" height="400" as="geometry" />
+        </mxCell>
+
+        <mxCell id="rx_in" value="rx_in_i[39:0]&#10;rx_in_q[39:0]&#10;rx_in_valid/ready" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=center" vertex="1" parent="1">
+          <mxGeometry x="60" y="470" width="140" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="fir_rx" value="&lt;b&gt;fir_rrc_rx&lt;/b&gt; (×2: I, Q)&#10;Matched filter IP&#10;40b→56b" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;align=center" vertex="1" parent="1">
+          <mxGeometry x="230" y="470" width="170" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="downsample" value="&lt;b&gt;axis_downsample_pick&lt;/b&gt;&#10;phase == OFFSET (=0)&#10;capture (SPS=4)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=center" vertex="1" parent="1">
+          <mxGeometry x="430" y="470" width="200" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="correlator" value="&lt;b&gt;preamble_correlator&lt;/b&gt;&#10;shift reg (16) ⊗ PREAMBLE&#10;matched filter&#10;56b → 72b (I/Q)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=center" vertex="1" parent="1">
+          <mxGeometry x="670" y="470" width="200" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="detector" value="&lt;b&gt;frame_sync_detector&lt;/b&gt;&#10;mag_sq = cI² + cQ² (128b)&#10;cmp mag_sq[127:64] &gt; THR&#10;cooldown = 32" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=center" vertex="1" parent="1">
+          <mxGeometry x="910" y="470" width="220" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sync_out" value="rx_sync_found (pulse)&#10;rx_sync_index[31:0]&#10;rx_sync_mag[63:0]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=center" vertex="1" parent="1">
+          <mxGeometry x="1180" y="470" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- RX bits path -->
+        <mxCell id="qpsk_demod" value="&lt;b&gt;qpsk_demodulator&lt;/b&gt;&#10;hard decision (sign bit)&#10;I&lt;0→1, Q&lt;0→1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=center" vertex="1" parent="1">
+          <mxGeometry x="430" y="610" width="200" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="rx_bits_out" value="rx_bits[1:0]&#10;rx_bits_valid/ready" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=center" vertex="1" parent="1">
+          <mxGeometry x="670" y="610" width="160" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Debug passthrough -->
+        <mxCell id="rx_debug" value="rx_out_i[55:0]&#10;rx_out_q[55:0]&#10;rx_out_valid  (debug)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=center;dashed=1" vertex="1" parent="1">
+          <mxGeometry x="430" y="730" width="200" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- RX arrows -->
+        <mxCell id="e_rx1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="rx_in" target="fir_rx">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_rx1_lbl" value="I/Q 40b" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10" vertex="1" connectable="0" parent="e_rx1">
+          <mxGeometry x="0" y="-1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e_rx2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="fir_rx" target="downsample">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_rx2_lbl" value="I/Q 56b&#10;(samp rate)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10" vertex="1" connectable="0" parent="e_rx2">
+          <mxGeometry x="0" y="-1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e_rx3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="downsample" target="correlator">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_rx3_lbl" value="I/Q 56b&#10;(sym rate)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10" vertex="1" connectable="0" parent="e_rx3">
+          <mxGeometry x="0" y="-1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e_rx4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="correlator" target="detector">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_rx4_lbl" value="corr I/Q 72b" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10" vertex="1" connectable="0" parent="e_rx4">
+          <mxGeometry x="0" y="-1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e_rx5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="detector" target="sync_out">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Downsample → demod (branch) -->
+        <mxCell id="e_demod1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0" edge="1" parent="1" source="downsample" target="qpsk_demod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_demod1_lbl" value="I/Q 56b" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10" vertex="1" connectable="0" parent="e_demod1">
+          <mxGeometry x="0" y="-1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e_demod2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="qpsk_demod" target="rx_bits_out">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_demod2_lbl" value="2 b" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10" vertex="1" connectable="0" parent="e_demod2">
+          <mxGeometry x="0" y="-1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <!-- Downsample → debug passthrough -->
+        <mxCell id="e_dbg" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;dashed=1;exitX=0.25;exitY=1;entryX=0.5;entryY=0" edge="1" parent="1" source="downsample" target="rx_debug">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============================ LEGEND / PARAMS ============================ -->
+        <mxCell id="legend_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#999999;dashed=0;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="40" y="850" width="1620" height="210" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_title" value="Legend &amp; Parameters" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=13;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="60" y="860" width="300" height="24" as="geometry" />
+        </mxCell>
+
+        <!-- Color legend -->
+        <mxCell id="lg_tx_c" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="60" y="895" width="28" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_tx_t" value="TX custom RTL" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="94" y="891" width="180" height="24" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lg_rx_c" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656" vertex="1" parent="1">
+          <mxGeometry x="60" y="920" width="28" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_rx_t" value="RX custom RTL" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="94" y="916" width="180" height="24" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lg_ip_c" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450" vertex="1" parent="1">
+          <mxGeometry x="60" y="945" width="28" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_ip_t" value="Xilinx IP (fir_rrc, fir_rrc_rx)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="94" y="941" width="220" height="24" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lg_ch_c" value="" style="rounded=20;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366" vertex="1" parent="1">
+          <mxGeometry x="60" y="970" width="28" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_ch_t" value="Channel (external)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="94" y="966" width="180" height="24" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lg_io_c" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666" vertex="1" parent="1">
+          <mxGeometry x="60" y="995" width="28" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_io_t" value="I/O port / control" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="94" y="991" width="180" height="24" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lg_ds_c" value="━ ━ ━" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="60" y="1020" width="28" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_ds_t" value="dashed = control / debug" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="94" y="1020" width="220" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Parameters column -->
+        <mxCell id="params_title" value="Parameters (qpsk_frame_sync_top)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="340" y="890" width="400" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="params_txt" value="W = 16  &#40;symbol width&#41;&#10;W_2 = 40  &#40;TX RRC output&#41;&#10;W_3 = 56  &#40;RX RRC output&#41;&#10;W_CORR = 72  &#40;correlator output&#41;&#10;SPS = 4, OFFSET = 0&#10;PREAMBLE_LEN = 16, SCALE = 12000&#10;SYNC_THRESHOLD = 500_000_000  &#40;= 5e8&#41;&#10;COOLDOWN_CYCLES = 32" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11;fontFamily=Courier New" vertex="1" parent="1">
+          <mxGeometry x="340" y="915" width="450" height="135" as="geometry" />
+        </mxCell>
+
+        <!-- Key notes column -->
+        <mxCell id="notes_title" value="Key RTL details" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="810" y="890" width="400" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="notes_txt" value="• AXI-Stream throughout &#40;valid/ready back-pressure&#41;&#10;• frame_builder in_ready = 0 during PREAMBLE state&#10;• axis_upsample_zeros: phase 0 → hold, 1..SPS−1 → 0&#10;• axis_downsample_pick: capture only when phase == OFFSET&#10;• preamble_correlator: shift[0]=newest; coefs = PREAMBLE[L−1−k]&#10;• frame_sync_detector: threshold on mag_sq[127:64] &#40;upper 64b only&#41;&#10;• qpsk_demodulator always accepts; sync handled by downstream logic" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="810" y="915" width="830" height="135" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
