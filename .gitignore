@@ -26,6 +26,9 @@ webtalk/
 # FIR IP coefficient files (auto-copied from Vivado_Project by run_all.sh)
 scm/src/tb/*.mif
 
+# XSim GUI session wave configs (per-user, auto-generated)
+scm/src/tb/*.wcfg
+
 # Vivado generated project (regeneratable from create_project.tcl)
 scm/Vivado_Project/
 
