@@ -42,7 +42,7 @@ compile_fir_ip() {
 xelab_args() {
     local name="$1"
     if [ "$name" = "tb_qpsk_frame_sync_top" ]; then
-        echo "-L xil_defaultlib -L fir_compiler_v7_2_23"
+        echo "-L xil_defaultlib -L fir_compiler_v7_2_23 -debug typical"
     else
         echo "-debug typical"
     fi

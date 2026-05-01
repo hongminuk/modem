@@ -4,8 +4,8 @@ log_wave -recursive *
 add_wave /tb_frame_sync_detector/clk
 add_wave /tb_frame_sync_detector/rst_n
 add_wave_divider "Correlation Input"
-add_wave -radix decimal /tb_frame_sync_detector/corr_i
-add_wave -radix decimal /tb_frame_sync_detector/corr_q
+add_wave -radix dec /tb_frame_sync_detector/corr_i
+add_wave -radix dec /tb_frame_sync_detector/corr_q
 add_wave /tb_frame_sync_detector/corr_valid
 add_wave /tb_frame_sync_detector/corr_ready
 add_wave_divider "Sync Output"
