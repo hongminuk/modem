@@ -150,7 +150,7 @@ end
 
 ## 6. 시간축 시뮬레이션 (SPS=4)
 
-### 시나리오 A — 정상 동작 (백투백)
+### 시나리오 A — 백투백 입력 (downstream 매 cycle 받음)
 ```
 cycle:           1     2    3    4    5    6    7    8    9
                  ─    ──   ──   ──   ──   ─    ──   ──   ──
@@ -172,8 +172,46 @@ out_handshake:   .    ✓    ✓    ✓    ✓★   .    ✓    ✓    ✓
 - cycle 1: in_fire (X 캡처) → cycle 2 부터 active=1
 - cycle 2~5: phase 0,1,2,3 진행, X / 0 / 0 / 0 출력
 - cycle 5: phase=SPS-1 + out_handshake fire → cycle 6 에 active=0 복귀
-- cycle 6: 다시 idle, in_fire (Y 캡처) → cycle 7 부터 다음 심볼 시작
-- **bubble 없음 — throughput 1 심볼 / SPS 사이클**
+- cycle 6: idle 상태, in_fire (Y 캡처). 그러나 **out_valid=0 라 출력 핸드쉐이크 없음**
+- cycle 7: active=1, 새 심볼 Y 출력 시작
+
+### ⚠️ Throughput — bubble 발생함 (보수적 정책의 결과)
+
+표를 자세히 보면 cycle 6 에 `out_handshake = .` (no fire). 즉 **5 cycle 마다 1 cycle 의 bubble** 발생.
+
+```
+입력측 throughput: 1 심볼 / (SPS+1) cycle = 1/5 = 0.2 sym/clk
+출력측 throughput: SPS / (SPS+1) sample/cycle = 4/5 = 0.8 sample/clk
+```
+
+→ **출력측이 100% throughput 이 아님!** SPS=4 기준 80%.
+
+### 왜 bubble 이 강제되나 — `active` 의 mutual exclusion
+
+```verilog
+assign in_ready  = (!active) && out_ready;    → in_fire 조건: active=0
+assign out_valid = active;                     → out_fire 조건: active=1
+```
+
+**`active` 한 비트로 input fire 와 output fire 가 mutually exclusive** → 같은 cycle 에 둘 다 발생 불가능. 따라서:
+- 마지막 출력 (`phase=SPS-1` + out_fire) → 다음 cycle 에 `active=0`
+- 그 cycle 에 in_fire 가능, 하지만 같은 cycle 에 출력은 불가능 (active=0 → out_valid=0)
+- 그 다음 cycle 에 비로소 새 심볼 출력 시작
+
+→ **input fire 와 다음 output 시작 사이에 1 cycle bubble 강제 삽입**.
+
+### Lookahead 정책으로 throughput 개선 가능
+
+현재의 `in_ready = !active && out_ready` 는 **보수적 정책**. lookahead 로 수정하면 bubble 제거 가능:
+
+```verilog
+// 개선안 (lookahead)
+assign in_ready = (!active || (phase == SPS-1 && out_ready)) && out_ready;
+```
+
+마지막 phase 의 출력 fire 와 동시에 새 input fire 를 허용 → **1.0 sample/clk** 달성. RTL 복잡도 ↑ trade-off.
+
+본 프로젝트는 **단순함을 위한 보수적 정책 채택**. 실제 응용에서 throughput 이 critical 하면 lookahead 로 교체.
 
 ### 시나리오 B — downstream stall
 ```
@@ -219,14 +257,22 @@ always_ff @(posedge clk or negedge rst_n) begin
 end
 ```
 
-**주의 — (A) 와 (B) 가 같은 클럭에서 동시에 발생할 수 있음.**
+### (A) 와 (B) 의 동시 fire 는 **불가능**
 
-cycle N 에서 `phase=SPS-1, out_handshake fire`, 동시에 `in_fire` 라면:
-- (A) 에서 `active <= 1, phase <= 0, hold_i <= in_i` 어사인
-- (B) 에서 `active <= 0, phase <= 0` 어사인
-- **마지막 어사인이 이김 (Verilog NBA 규칙)** → (A) 가 뒤라면 active=1 유지, 새 심볼 캡처
+```
+in_fire  조건: in_valid && in_ready  = in_valid && (!active && out_ready)   → active=0 필요
+out_fire 조건: out_valid && out_ready = active && out_ready                 → active=1 필요
+```
 
-→ 코드 순서상 (A) 가 (B) 뒤에 있으므로 **back-to-back 동작 시 (A) 가 우선**. 즉 한 사이클도 안 놀고 새 심볼로 전환 가능.
+`active` 한 비트로 두 fire 가 **mutually exclusive**. 따라서 (A) 와 (B) 가 같은 클럭에 동시 fire 하는 시나리오는 존재하지 않음. NBA 우선순위 분석 자체가 무의미.
+
+대신 시퀀스는:
+```
+cycle N:    active=1, phase=SPS-1, (B) fire   → 다음 cycle 에 active <= 0
+cycle N+1:  active=0, idle. (A) fire 가능       → 다음 cycle 에 active <= 1
+cycle N+2:  active=1, 새 심볼 출력 시작
+```
+→ 사이에 1-cycle bubble (cycle N+1) 이 강제 삽입 (§6 참고).
 
 ---
 
@@ -257,4 +303,5 @@ cycle N 에서 `phase=SPS-1, out_handshake fire`, 동시에 `in_fire` 라면:
 - 특히:
   - `phase=SPS-1` → 다음 cycle 에 `active=0` 으로 떨어지는가
   - 그 다음 cycle 에 `in_ready=1` 다시 올라오는가
-  - back-to-back 입력 시 출력 사이에 빈 cycle 이 없는가
+  - back-to-back 입력 시 출력 사이에 **1 cycle bubble** 이 발생하는가 (보수적 정책 검증)
+  - 입력측 throughput = 1/(SPS+1), 출력측 throughput = SPS/(SPS+1) 로 측정되는가

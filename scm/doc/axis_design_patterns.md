@@ -14,20 +14,32 @@
 ```verilog
 // 출력은 always_ff 안에서 결정 (레지스터)
 always_ff @(posedge clk) begin
-    if (in_valid && in_ready) begin
-        out_i     <= mapped_i;     // 출력 레지스터에 저장
-        out_valid <= 1'b1;
-    end
+    // (B) output handshake — 먼저
     if (out_valid && out_ready) begin
         out_valid <= 1'b0;
+    end
+    // (A) input handshake — 나중 (NBA 마지막 어사인이 이김)
+    if (in_valid && in_ready) begin
+        out_i     <= mapped_i;     // 출력 레지스터에 저장
+        out_valid <= 1'b1;          // ← 동시 fire 시에도 1 유지 → 데이터 보존
     end
 end
 assign in_ready = out_ready || !out_valid;
 ```
 
+### ⚠️ 코드 순서가 매우 중요
+
+`out_valid && out_ready && in_valid && in_ready` 가 동시에 만족 가능 (back-to-back) 한 cycle 에서:
+- **(B) 먼저, (A) 나중** 순서 → (A) 가 NBA 마지막 어사인 → `out_valid <= 1'b1` → ✅ 데이터 보존
+- (A) 먼저, (B) 나중 순서 → (B) 가 마지막 → `out_valid <= 1'b0` → ✗ **데이터 손실 버그**
+
+→ Pattern A 채택 시 **반드시 invalidate-then-load 순서로 작성**.
+
+특징:
 - 출력 레지스터 1단(`out_i`, `out_valid`) 으로 **1개 데이터 임시 보관 가능**
 - 상류 / 하류 둘 중 하나가 stall 해도 한 사이클 쿠션 있음
 - 표준 AXI-Stream 1-stage register slice 와 동일
+- Throughput **1.0 sample/clk** (back-to-back 동작 가능)
 
 ### Pattern B — **FSM + 조합 출력** (`axis_upsample_zeros` 식)
 
@@ -69,7 +81,7 @@ assign in_ready  = !active && out_ready;
 | **상태가 필요한가?** | ❌ 출력 레지스터 1개로 충분 | ✅ "몇 번째 샘플 내는 중?" 추적 필요 |
 | **출력 구현** | `always_ff` (레지스터) | `always_comb` (조합) |
 | **`in_ready` 정책** | 표준 skid: `out_ready \|\| !out_valid` | 맞춤: `!active && out_ready` |
-| **Throughput** | 1 데이터 / clk | 1 데이터 / N clk (입력측), 1 / clk (출력측) |
+| **Throughput** | 1 데이터 / clk (양쪽 동일) | 1 데이터 / (N+1) clk (입력측), N/(N+1) sample/clk (출력측) — bubble 강제 |
 | **Stall 동작** | 출력 레지스터에 임시 보관 → bubble 적게 | 입력 거부 (`in_ready=0`) → upstream backpressure |
 
 ### 핵심 인사이트
