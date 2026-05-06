@@ -124,7 +124,7 @@ assign in_ready  = out_ready;
 | [qpsk_modulator.sv](../src/rtl/qpsk_modulator.sv) | A (skid) | 1:1 매핑 (bit pair → I/Q) |
 | [qpsk_demodulator.sv](../src/rtl/qpsk_demodulator.sv) | A (skid) | 1:1 sign decision |
 | [axis_upsample_zeros.sv](../src/rtl/axis_upsample_zeros.sv) | B (FSM) | 1 : SPS (zero insertion) |
-| [axis_downsample_pick.sv](../src/rtl/axis_downsample_pick.sv) | B (FSM) | SPS : 1 (phase 선택) |
+| [axis_downsample_pick.sv](../src/rtl/axis_downsample_pick.sv) | **Hybrid (C + A)** | phase!=OFFSET 은 조합 직결, phase==OFFSET 만 1-stage skid |
 | [frame_builder.sv](../src/rtl/frame_builder.sv) | B (FSM) | IDLE/PREAMBLE/PAYLOAD 3-state, preamble 16 사이클 자동 출력 |
 | [preamble_correlator.sv](../src/rtl/preamble_correlator.sv) | A 변형 (shift reg + 조합 sum) | 1:1 이지만 내부에 16-tap shift register |
 | [frame_sync_detector.sv](../src/rtl/frame_sync_detector.sv) | A (멀티 stage pipeline) | 1:1 이지만 mag_sq 계산 + delay line + cooldown |
